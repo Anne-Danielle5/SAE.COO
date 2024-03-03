@@ -39,7 +39,7 @@ with open('extraction-2021-2022-anonyme.csv', newline='', encoding='latin-1') as
 df = pd.DataFrame(data, columns=['Reservation au nom de', 'Domaines', 'Ressource', 'Description', 'Heure-Durée', 'Type', 'Dernière mise à jour'])
 
 # Appliquer la fonction personnalisée pour fractionner la colonne 'Heure-Durée'
-df[['Date', 'Heure', 'Durée']] = pd.DataFrame(df['Heure-Durée'].apply(split_heure_duree).tolist(), index=df.index)
+df[['Date', 'Durée', 'Durées']] = pd.DataFrame(df['Heure-Durée'].apply(split_heure_duree).tolist(), index=df.index)
 
 # Supprimer la colonne 'Heure-Durée' originale
 df.drop(columns=['Heure-Durée'], inplace=True)
@@ -51,9 +51,16 @@ df.drop(columns=['Heure-Durée'], inplace=True)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
 
+# Fractionner la colonne 'Date' en deux colonnes 'Date' et 'Heure'
+df[['Date', 'Heures']] = df['Date'].str.split(r'\s(?=[^\s]*$)', expand=True)
+
+# Afficher le résultat
+
+
+
 # Afficher le DataFrame résultant
 print(df['Date'])
-print(df['Heure'])
+print(df['Heures'])
 print(df['Durée'])
 
         
