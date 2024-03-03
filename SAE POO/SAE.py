@@ -1,38 +1,63 @@
 #import csv
+#import pandas as pd
+
+#data = []
+
 #with open('extraction-2021-2022-anonyme.csv', newline='', encoding='latin-1') as csvfile:
     #csv_reader = csv.reader(csvfile, delimiter=';')
-    #a=[]
-    #df={}
     #for row in csv_reader:
-        #print(row)
+      #  data.append(row)  # Ajouter chaque ligne du CSV à la liste data
+
+# Créer un DataFrame à partir des données
+#df = pd.DataFrame(data, columns=['Reservation au nom de', 'Domaines ', 'Ressource ', 'Description ', 'Heure-Durée ', 'Type ', 'Dernière mise à jour '])
+#df['Heure-Durée '] = df['Heure-Durée '].str.split('-')
 
 import csv
+import pandas as pd
 
-# Ouvrir le fichier CSV
+# Fonction personnalisée pour fractionner les valeurs de la colonne "Heure-Durée"
+def split_heure_duree(value):
+    parts = value.split(' - ')
+    if len(parts) == 3:
+        return parts
+    elif len(parts) == 2:
+        # Si seulement deux parties sont présentes, nous pouvons supposer que la durée n'est pas spécifiée
+        return [parts[0], parts[1], '']
+    else:
+        # Si le format n'est pas conforme, nous retournons trois parties vides
+        return ['', '', '']
+
+# Charger les données depuis le fichier CSV
+data = []
+
 with open('extraction-2021-2022-anonyme.csv', newline='', encoding='latin-1') as csvfile:
     csv_reader = csv.reader(csvfile, delimiter=';')
-    
-    # Lire la première ligne pour obtenir les noms des colonnes
-    columns = next(csv_reader)
-    
-    # Initialiser le dictionnaire pour stocker les données
-    data_dict = {col: [] for col in columns}
-    
-    # Parcourir les lignes restantes du fichier CSV
     for row in csv_reader:
-        # Ajouter chaque élément de la ligne à la liste correspondante dans le dictionnaire
-        for col, value in zip(columns, row):
-            data_dict[col].append(value)
+        data.append(row)  
 
-# Afficher le dictionnaire
-print(data_dict)
+# Créer un DataFrame à partir des données
+df = pd.DataFrame(data, columns=['Reservation au nom de', 'Domaines', 'Ressource', 'Description', 'Heure-Durée', 'Type', 'Dernière mise à jour'])
+
+# Appliquer la fonction personnalisée pour fractionner la colonne 'Heure-Durée'
+df[['Date', 'Heure', 'Durée']] = pd.DataFrame(df['Heure-Durée'].apply(split_heure_duree).tolist(), index=df.index)
+
+# Supprimer la colonne 'Heure-Durée' originale
+df.drop(columns=['Heure-Durée'], inplace=True)
+
+
+
+
+# Afficher toutes les lignes et colonnes du DataFrame
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+
+# Afficher le DataFrame résultant
+print(df['Date'])
+print(df['Heure'])
+print(df['Durée'])
 
         
 
-        
-#for value in row:
-#a.append(value)
-#print(a)
 
 
 
