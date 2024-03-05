@@ -1,78 +1,76 @@
-#import csv
-#import pandas as pd
 
-#data = []
-
-#with open('extraction-2021-2022-anonyme.csv', newline='', encoding='latin-1') as csvfile:
-    #csv_reader = csv.reader(csvfile, delimiter=';')
-    #for row in csv_reader:
-      #  data.append(row)  # Ajouter chaque ligne du CSV à la liste data
-
-# Créer un DataFrame à partir des données
-#df = pd.DataFrame(data, columns=['Reservation au nom de', 'Domaines ', 'Ressource ', 'Description ', 'Heure-Durée ', 'Type ', 'Dernière mise à jour '])
-#df['Heure-Durée '] = df['Heure-Durée '].str.split('-')
-
-import csv
 import pandas as pd
-from datetime import datetime
-import locale 
-
-# Fonction personnalisée pour fractionner les valeurs de la colonne "Heure-Durée"
-def split_heure_duree(value):
-    parts = value.split(' - ')
-    if len(parts) == 3:
-        return parts
-    elif len(parts) == 2:
-        # Si seulement deux parties sont présentes, nous pouvons supposer que la durée n'est pas spécifiée
-        return [parts[0], parts[1], '']
-    else:
-        # Si le format n'est pas conforme, nous retournons trois parties vides
-        return ['', '', '']
-
+import csv
+import re
 # Charger les données depuis le fichier CSV
 data = []
 
 with open('extraction-2021-2022-anonyme.csv', newline='', encoding='latin-1') as csvfile:
     csv_reader = csv.reader(csvfile, delimiter=';')
-    for row in csv_reader:
-        data.append(row)  
+    for i, row in enumerate(csv_reader):
+        if i == 0:  # Ignore la première ligne
+            columns = row  # Stocke les noms de colonnes
+        else:
+            data.append(row)
 
 # Créer un DataFrame à partir des données
-df = pd.DataFrame(data, columns=['Reservation au nom de', 'Domaines', 'Ressource', 'Description', 'Heure-Durée', 'Type', 'Dernière mise à jour'])
+df = pd.DataFrame(data, columns=columns)
+df = df.drop(0)  # Supprime la première ligne
 
-# Appliquer la fonction personnalisée pour fractionner la colonne 'Heure-Durée'
-df[['Date', 'Durée', 'Durées']] = pd.DataFrame(df['Heure-Durée'].apply(split_heure_duree).tolist(), index=df.index)
+# Diviser la colonne "Heure-Durée" en deux colonnes
+df[['Date', 'Durée']] = df['Heure - Durée :'].str.split('-', expand=True)
 
-# Supprimer la colonne 'Heure-Durée' originale
-df.drop(columns=['Heure-Durée'], inplace=True)
+# Supprimer la colonne "Heure-Durée"
+df = df.drop(columns=['Heure - Durée :'])
+
+# Afficher le DataFrame après les modifications
+#print(df)
+
+# Fonction pour convertir le format de la colonne "Date"
+# Fonction pour convertir le format de la colonne "Date"
+def convert_date_format(date_str):
+    pattern = r"(?P<jour>\w+) (?P<jour_num>\d+) (?P<mois>\w+) (?P<annee>\d+) (?P<heure>\d+):(?P<minute>\d+):(?P<seconde>\d+)"
+    match = re.search(pattern, date_str)
+    if match:
+        mois_fr_to_en = {
+            'janvier': 'January',
+            'février': 'February',
+            'mars': 'March',
+            'avril': 'April',
+            'mai': 'May',
+            'juin': 'June',
+            'juillet': 'July',
+            'août': 'August',
+            'septembre': 'September',
+            'octobre': 'October',
+            'novembre': 'November',
+            'décembre': 'December'
+        }
+        return pd.Timestamp(
+            int(match.group("annee")), 
+            pd.to_datetime(mois_fr_to_en[match.group("mois")], format='%B').month, 
+            int(match.group("jour_num")), 
+            int(match.group("heure")), 
+            int(match.group("minute")), 
+            int(match.group("seconde"))
+        )
+
+# Appliquer la fonction convert_date_format à la colonne "Date"
+df['Date'] = df['Date'].apply(convert_date_format)
+
+
+# Fractionner la colonne "Date" en deux colonnes "Date" et "Heure"
+df[['Dates', 'Heure']] = df['Date'].astype(str).str.split(' ',n= 1,expand=True)
+
+# Supprimer la colonne "Date" précédente
+df = df.drop(columns=['Date'])
+
+# Afficher le DataFrame après les modifications
+print(df['Domaines :'])
 
 
 
 
-# Afficher toutes les lignes et colonnes du DataFrame
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-
-# Fractionner la colonne 'Date' en deux colonnes 'Date' et 'Heure'
-df[['Date', 'Heures']] = df['Date'].str.split(r'\s(?=[^\s]*$)', expand=True)
-# Convertir la colonne 'Date' en format date, en ignorant les erreurs
-#df['Date'] = pd.to_datetime(df['Date'], format='%A %d %B %Y %H:%M:%S', errors='coerce')
-
-# Afficher le DataFrame avec la colonne 'Date' convertie en format date
-
-# Afficher le résultat
-
-
-# Afficher le DataFrame résultant
-locale.setlocale(locale.LC_TIME, "fr_FR")
-df['Date'] = df.iloc[10:, df.columns.get_loc('Date')]
-date_str_list = df['Date'].tolist()
-date_obj_list = [datetime.strptime(date_str, '%A %d %B %Y') for date_str in date_str_list]
-for date_obj in date_obj_list:
-    print(date_obj)
-print(df['Date'])
-#print(df['Heures'])
-#print(df['Durée'])
 
 
 
