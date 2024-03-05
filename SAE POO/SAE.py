@@ -14,6 +14,8 @@
 
 import csv
 import pandas as pd
+from datetime import datetime
+import locale 
 
 # Fonction personnalisée pour fractionner les valeurs de la colonne "Heure-Durée"
 def split_heure_duree(value):
@@ -53,15 +55,29 @@ pd.set_option('display.max_columns', None)
 
 # Fractionner la colonne 'Date' en deux colonnes 'Date' et 'Heure'
 df[['Date', 'Heures']] = df['Date'].str.split(r'\s(?=[^\s]*$)', expand=True)
+# Convertir la colonne 'Date' en format date, en ignorant les erreurs
+#df['Date'] = pd.to_datetime(df['Date'], format='%A %d %B %Y %H:%M:%S', errors='coerce')
+
+# Afficher le DataFrame avec la colonne 'Date' convertie en format date
 
 # Afficher le résultat
 
 
-
 # Afficher le DataFrame résultant
+locale.setlocale(locale.LC_TIME, "fr_FR")
+df['Date'] = df.iloc[10:, df.columns.get_loc('Date')]
+date_str_list = df['Date'].tolist()
+date_obj_list = [datetime.strptime(date_str, '%A %d %B %Y') for date_str in date_str_list]
+for date_obj in date_obj_list:
+    print(date_obj)
 print(df['Date'])
-print(df['Heures'])
-print(df['Durée'])
+#print(df['Heures'])
+#print(df['Durée'])
+
+
+
+
+
 
         
 
